@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cinder Court — a duel of crests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Cinder Court: an open-handed card duel over three lantern-lit hearths." />
+    <style>
+      /* Both display faces ship with the game under fonts/, so nothing is loaded from
+         the network and the type is identical on every machine. */
+      @font-face {
+        font-family: 'Anton';
+        src: url('./fonts/Anton-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Cinzel';
+        src: url('./fonts/Cinzel-Variable.ttf') format('truetype');
+        font-weight: 400 900;
+        font-style: normal;
+        font-display: block;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #070504;
+        overflow: hidden;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Cinzel', Georgia, serif;
+        color: #8e7b66;
+      }
+
+      /* 16:9, letterboxed into whatever window the court is opened in. */
+      #court {
+        display: block;
+        width: min(100vw, 177.7778vh);
+        height: min(56.25vw, 100vh);
+        background: #0b0706;
+        box-shadow: 0 0 120px rgba(255, 140, 50, 0.16);
+        touch-action: none;
+      }
+
+      noscript {
+        position: absolute;
+        font-size: 18px;
+        letter-spacing: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="court" width="1280" height="720" aria-label="Cinder Court: a card duel over three hearths"></canvas>
+    <noscript>CINDER COURT needs JavaScript to light its hearths.</noscript>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
