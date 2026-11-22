@@ -49,21 +49,21 @@ export function drawTitleScreen(ctx, scene) {
   const spacing = 132;
   CREST_IDS.forEach((id, i) => {
     const cx = VIEW.w / 2 + (i - 1.5) * spacing;
-    const cy = 404;
+    const cy = 396;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.shadowColor = CRESTS[id].color;
     ctx.shadowBlur = 26;
     drawCrest(ctx, id, 78, CRESTS[id].color);
     ctx.restore();
-    cinzel(ctx, 15, CRESTS[id].bright, { spacing: 4 });
-    ctx.fillText(CRESTS[id].name, cx, cy + 58);
+    cinzel(ctx, 16, CRESTS[id].bright, { spacing: 4 });
+    ctx.fillText(CRESTS[id].name, cx, cy + 56);
     resetSpacing(ctx);
   });
 
   cinzel(ctx, 16, '#ffd98a', { spacing: 2.4 });
-  ctx.fillText('HIGH RANK TAKES THE HEARTH  ·  A TIE GOES TO THE CYCLE', VIEW.w / 2, 472);
-  ctx.fillText('THE SAME CREST ON THE HEARTH BESIDE IT IS STOKED  +2', VIEW.w / 2, 494);
+  ctx.fillText('HIGH RANK TAKES THE HEARTH  ·  A TIE GOES TO THE CYCLE', VIEW.w / 2, 482);
+  ctx.fillText('THE SAME CREST ON THE HEARTH BESIDE IT IS STOKED  +2', VIEW.w / 2, 504);
   resetSpacing(ctx);
 
   // a real hand, fanned across the foot of the court
@@ -71,7 +71,7 @@ export function drawTitleScreen(ctx, scene) {
     const spread = i - (TITLE_FAN.length - 1) / 2;
     const view = {
       x: VIEW.w / 2 + spread * 126,
-      y: 646 + Math.sin(scene.time * 1.4 + i) * 3,
+      y: 643 + Math.sin(scene.time * 1.4 + i) * 3,
       scale: 0.72,
       rot: spread * 0.095,
       face: 1,
@@ -82,9 +82,9 @@ export function drawTitleScreen(ctx, scene) {
   const pulse = 0.62 + 0.38 * (1 + Math.sin(scene.time * 3)) * 0.5;
   ctx.save();
   ctx.globalAlpha = pulse;
-  plate(ctx, VIEW.w / 2 - 216, 514, 432, 50, { fill: 'rgba(12,8,6,0.88)', stroke: INK.gold, lineWidth: 2.4, radius: 10 });
+  plate(ctx, VIEW.w / 2 - 216, 524, 432, 50, { fill: 'rgba(12,8,6,0.88)', stroke: INK.gold, lineWidth: 2.4, radius: 10 });
   anton(ctx, 30, INK.gold);
-  ctx.fillText('PRESS ENTER OR CLICK TO DEAL', VIEW.w / 2, 540);
+  ctx.fillText('PRESS ENTER OR CLICK TO DEAL', VIEW.w / 2, 550);
   ctx.restore();
 }
 
