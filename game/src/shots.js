@@ -5,7 +5,7 @@
 // and table functions a live match calls. Nothing is painted by hand, and the same seed
 // always yields the same frame, so a screenshot can be retaken exactly.
 
-import { HEARTH_COUNT, TIME, setDressing } from './config.js';
+import { HEARTH_COUNT, TIME, ZONE, setDressing } from './config.js';
 import { createTable, playToHearth, resolveNextClash, startRound, checkOutcome } from './table.js';
 import { createRival, peekIntent } from './ai.js';
 import { takeNamedCard } from './deck.js';
@@ -120,13 +120,23 @@ function buildMidRound(app) {
   app.intent = peekIntent(table, app.rival);
   app.hover = null;
   settle(app, 2.6);
-  // The springs have come to rest; put the rim glow back on the cards that won their
-  // seam, so the frame catches the court a beat after the snap rather than long after.
+  // Let the springs rest, then re-light the moment: the stoked seam throws sparks and the
+  // left hearth sheds cold ones, and a third of a second of flight is stepped so they are
+  // caught mid-arc. The frame reads as a court a beat after the snap, not a diagram.
+  const seam = ZONE.hearthSeamY;
+  emitEmbers(app.burst, ZONE.hearthCentersX[1], seam + 6, '#ff8a3d', 52, 1.9);
+  emitEmbers(app.burst, ZONE.hearthCentersX[1], seam - 14, '#ffd98a', 28, 1.35);
+  emitEmbers(app.burst, ZONE.hearthCentersX[0], seam + 2, '#9db9d4', 18, 0.9);
+  settle(app, 0.42);
+  // Put the rim glow and the landing pop back on the cards that won their seam.
   for (let i = 0; i < HEARTH_COUNT; i += 1) {
     const event = table.hearths[i].event;
     if (!event) continue;
     const winner = table.hearths[i][event.winner];
-    if (winner) ensureView(winner).glow = event.stoked ? 0.85 : 0.5;
+    if (!winner) continue;
+    const view = ensureView(winner);
+    view.glow = event.stoked ? 0.95 : 0.55;
+    view.pop = event.stoked ? 0.55 : 0.28;
   }
 }
 

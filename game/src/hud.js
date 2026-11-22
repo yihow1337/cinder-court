@@ -31,45 +31,62 @@ export function drawLifeBlock(ctx, scene, side) {
   const flash = scene.table.flash[side];
   const accent = side === 'player' ? INK.gold : INK.cold;
   const hot = flash > 0.02;
+  // In focus the block has to survive a contact sheet, so it is struck harder: a deeper
+  // plate, the suitor's colour on the rule, and the numeral a shade past its accent.
+  const bright = side === 'player' ? '#ffe6a8' : '#dbe9f7';
+  const rule = DRESS.rails
+    ? `rgba(246,201,87,${side === 'player' ? 0.4 : 0.22})`
+    : side === 'player'
+      ? 'rgba(246,201,87,0.8)'
+      : 'rgba(157,185,212,0.7)';
 
   plate(ctx, box.x, box.y, box.w, box.h, {
-    fill: hot ? `rgba(90,22,12,${0.5 + flash * 0.35})` : 'rgba(12,8,6,0.8)',
-    stroke: hot ? INK.blood : `rgba(246,201,87,${side === 'player' ? 0.4 : 0.22})`,
+    fill: hot
+      ? `rgba(90,22,12,${0.5 + flash * 0.35})`
+      : DRESS.rails
+        ? 'rgba(12,8,6,0.8)'
+        : side === 'player'
+          ? 'rgba(24,13,6,0.92)'
+          : 'rgba(9,14,21,0.92)',
+    stroke: hot ? INK.blood : rule,
     radius: 12,
-    lineWidth: side === 'player' ? 2.4 : 1.8,
+    lineWidth: DRESS.rails ? (side === 'player' ? 2.4 : 1.8) : 2.8,
   });
 
   // Two rhythms, one rule: the numeral never shares a band with anything else.
   // On the rails it sits beside the name with the pips along the foot; in focus the
   // name and pips stack at the head and the numeral owns the whole lower half.
   const big = DRESS.lifeNumeral;
-  const headY = DRESS.rails ? box.y + 42 : box.y + 28;
-  const pipY = box.y + box.h - 16;
-  const numeralY = DRESS.rails ? box.y + box.h - 66 : box.y + box.h / 2 + 14;
+  const headY = DRESS.rails ? box.y + 42 : box.y + 30;
+  const pipY = box.y + box.h - (DRESS.rails ? 16 : 18);
+  const numeralY = DRESS.rails ? box.y + box.h - 66 : box.y + box.h / 2 + 8;
 
-  suitorSigil(ctx, side, box.x + (DRESS.rails ? 42 : 30), headY, DRESS.rails ? 24 : 19);
+  suitorSigil(ctx, side, box.x + (DRESS.rails ? 42 : 32), headY, DRESS.rails ? 24 : 21);
 
-  cinzel(ctx, DRESS.rails ? 22 : 21, accent, { align: 'left', spacing: 4.5 });
-  ctx.fillText(side === 'player' ? PLAYER_NAME : RIVAL_NAME, box.x + (DRESS.rails ? 76 : 58), headY - (DRESS.rails ? 9 : 1));
+  cinzel(ctx, DRESS.rails ? 22 : 23, accent, { align: 'left', spacing: 4.5 });
+  ctx.fillText(side === 'player' ? PLAYER_NAME : RIVAL_NAME, box.x + (DRESS.rails ? 76 : 62), headY - (DRESS.rails ? 9 : 1));
   if (DRESS.rails) {
     cinzel(ctx, 9.5, INK.ashDim, { align: 'left', spacing: 1.8 });
     ctx.fillText(side === 'player' ? PLAYER_TITLE : RIVAL_TITLE, box.x + 76, headY + 13);
   }
   resetSpacing(ctx);
 
-  anton(ctx, big, hot ? INK.blood : accent, 'right');
+  // The total is the one thing that has to survive the contact sheet, so in focus it is
+  // struck twice through the same shadow: the glow doubles and the numeral keeps its edge.
+  anton(ctx, big, hot ? INK.blood : DRESS.rails ? accent : bright, 'right');
   ctx.save();
   ctx.shadowColor = hot ? INK.blood : accent;
-  ctx.shadowBlur = 18 + flash * 30;
+  ctx.shadowBlur = (DRESS.rails ? 18 : 30) + flash * 30;
   ctx.fillText(String(life), box.x + box.w - 20, numeralY);
+  if (!DRESS.rails) ctx.fillText(String(life), box.x + box.w - 20, numeralY);
   ctx.restore();
-  cinzel(ctx, DRESS.rails ? 12 : 14, INK.ashDim, { align: 'left', spacing: 5 });
+  cinzel(ctx, DRESS.rails ? 12 : 16, DRESS.rails ? INK.ashDim : INK.ash, { align: 'left', spacing: 5 });
   ctx.fillText('LIFE', box.x + 20, numeralY);
   resetSpacing(ctx);
 
   const step = (box.w - 38) / (LIFE_START - 1);
   for (let i = 0; i < LIFE_START; i += 1) {
-    lifePip(ctx, box.x + 19 + i * step, pipY, 7.5, i < life, accent);
+    lifePip(ctx, box.x + 19 + i * step, pipY, DRESS.rails ? 7.5 : 9, i < life, accent);
   }
 }
 
@@ -206,7 +223,7 @@ export function drawTurnBanner(ctx, scene) {
         : table.phase === 'over'
           ? 'COURT CLOSED'
           : 'VESPER MOVES';
-  anton(ctx, DRESS.rails ? (yours ? 32 : 28) : 34, accent);
+  anton(ctx, DRESS.rails ? (yours ? 32 : 28) : 38, accent);
   ctx.save();
   if (yours) {
     ctx.shadowColor = INK.gold;

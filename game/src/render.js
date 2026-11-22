@@ -38,7 +38,7 @@ export function drawBackdrop(ctx, scene) {
   ctx.save();
   const band = ctx.createLinearGradient(0, 150, 0, 560);
   band.addColorStop(0, 'rgba(74,38,20,0.0)');
-  band.addColorStop(0.5, 'rgba(96,49,24,0.55)');
+  band.addColorStop(0.5, 'rgba(104,54,26,0.66)');
   band.addColorStop(1, 'rgba(40,20,11,0.0)');
   ctx.fillStyle = band;
   ctx.fillRect(0, 150, VIEW.w, 410);
@@ -54,7 +54,7 @@ function hearthHeat(scene, index) {
   const hearth = table.hearths[index];
   let heat = 0.5;
   if (hearth.player || hearth.rival) heat += 0.2;
-  if (hearth.event) heat += 0.3;
+  if (hearth.event) heat += hearth.event.stoked ? 0.72 : 0.3;
   if (scene.selection !== null && scene.selection !== undefined && !hearth.player) heat += 0.35;
   if (scene.hover && scene.hover.kind === 'hearth' && scene.hover.index === index) heat += 0.4;
   return heat;
@@ -72,12 +72,12 @@ export function drawHearths(ctx, scene) {
     // the stone plate the two cards meet over
     ctx.save();
     ctx.translate(cx, ZONE.hearthSeamY);
-    ctx.fillStyle = 'rgba(28,15,9,0.7)';
+    ctx.fillStyle = 'rgba(34,18,10,0.78)';
     ctx.beginPath();
     ctx.ellipse(0, 0, 126, 74, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = `rgba(246,201,87,${0.12 + heat * 0.14})`;
-    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = `rgba(246,201,87,${0.2 + heat * 0.2})`;
+    ctx.lineWidth = DRESS.rails ? 1.6 : 2.2;
     ctx.stroke();
     ctx.restore();
 
@@ -287,12 +287,30 @@ function drawTell(ctx, scene, index, crestId, strength, label) {
   drawCrest(ctx, crestId, 68 * s, crest.color);
   ctx.restore();
 
+  // The tell is the one sentence on the table, so it is set on its own lacquered strip
+  // with a crest-coloured rule: the words keep their contrast even against a lit hearth.
+  const nameSize = 13.5 * s;
+  const lineSize = 11.5 * s;
+  const topY = slot.y + 6 * s;
+  cinzel(ctx, nameSize, crest.bright, { spacing: 3.2 * s });
+  const nameW = ctx.measureText('VESPER').width;
+  cinzel(ctx, lineSize, crest.bright, { spacing: 2.4 * s, weight: 700 });
+  const lineW = ctx.measureText(label).width;
+  const boxW = Math.max(nameW, lineW) + 30 * s;
+  const boxH = 46 * s;
+
   ctx.save();
-  ctx.globalAlpha = 0.72 + 0.28 * strength;
-  cinzel(ctx, 12 * s, crest.bright, { spacing: 3 * s });
-  ctx.fillText('VESPER', slot.x, slot.y + 20 * s);
-  cinzel(ctx, 10 * s, crest.bright, { spacing: 2 * s });
-  ctx.fillText(label, slot.x, slot.y + 40 * s);
+  ctx.globalAlpha = 0.7 + 0.3 * strength;
+  plate(ctx, slot.x - boxW / 2, topY, boxW, boxH, {
+    fill: 'rgba(7,5,4,0.88)',
+    stroke: crest.color,
+    lineWidth: 2.2,
+    radius: 9 * s,
+  });
+  cinzel(ctx, nameSize, crest.bright, { spacing: 3.2 * s });
+  ctx.fillText('VESPER', slot.x, topY + 15 * s);
+  cinzel(ctx, lineSize, '#f3e7d2', { spacing: 2.4 * s, weight: 700 });
+  ctx.fillText(label, slot.x, topY + 33 * s);
   ctx.restore();
   resetSpacing(ctx);
 }

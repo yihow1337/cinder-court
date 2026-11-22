@@ -17,18 +17,67 @@ const TITLE_FAN = [
   { id: 'ash-2', crest: 'ash', rank: 2 },
 ];
 
+/** One crest struck as a coin: dark disc, crest-coloured ring, the silhouette inside. */
+function crestMedallion(ctx, id, cx, cy, r) {
+  const crest = CRESTS[id];
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.shadowColor = crest.color;
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = 'rgba(12,8,6,0.92)';
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = crest.color;
+  ctx.lineWidth = 3.4;
+  ctx.beginPath();
+  ctx.arc(0, 0, r - 2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.strokeStyle = crest.deep;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.arc(0, 0, r - 9, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  drawCrest(ctx, id, r * 1.42, crest.color);
+  ctx.restore();
+}
+
+/** A rule set in a lacquered chip, so the law reads as an emblem and not a caption. */
+function ruleChip(ctx, text, cx, cy) {
+  cinzel(ctx, 18, '#ffe3a6', { spacing: 2.6, weight: 700 });
+  const w = ctx.measureText(text).width + 40;
+  plate(ctx, cx - w / 2, cy - 19, w, 38, {
+    fill: 'rgba(10,7,5,0.9)',
+    stroke: 'rgba(246,201,87,0.62)',
+    lineWidth: 1.8,
+    radius: 8,
+  });
+  cinzel(ctx, 18, '#ffe3a6', { spacing: 2.6, weight: 700 });
+  ctx.fillText(text, cx, cy + 1);
+  resetSpacing(ctx);
+  return w;
+}
+
 export function drawTitleScreen(ctx, scene) {
   drawBackdrop(ctx, scene);
-  lightPool(ctx, VIEW.w / 2, 250, 560, 'rgba(255,170,80,0.55)', 0.5);
+  lightPool(ctx, VIEW.w / 2, 210, 560, 'rgba(255,170,80,0.55)', 0.5);
+  // a second pool at the foot, so the fanned hand lies on a lit table rather than in air
+  lightPool(ctx, VIEW.w / 2, 640, 520, 'rgba(255,146,54,0.42)', 0.42);
 
   // wordmark, two lines so it stays huge
   ctx.save();
   ctx.shadowColor = 'rgba(255,150,60,0.8)';
   ctx.shadowBlur = 46;
   cinzel(ctx, 128, INK.gold, { spacing: 16 });
-  ctx.fillText('CINDER', VIEW.w / 2 + 8, 136);
+  ctx.fillText('CINDER', VIEW.w / 2 + 8, 112);
   cinzel(ctx, 128, '#ffe6a8', { spacing: 16 });
-  ctx.fillText('COURT', VIEW.w / 2 + 8, 262);
+  ctx.fillText('COURT', VIEW.w / 2 + 8, 228);
   ctx.restore();
   resetSpacing(ctx);
 
@@ -36,44 +85,45 @@ export function drawTitleScreen(ctx, scene) {
   ctx.strokeStyle = 'rgba(246,201,87,0.55)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(VIEW.w / 2 - 300, 318);
-  ctx.lineTo(VIEW.w / 2 + 300, 318);
+  ctx.moveTo(VIEW.w / 2 - 300, 288);
+  ctx.lineTo(VIEW.w / 2 + 300, 288);
   ctx.stroke();
   ctx.restore();
 
   cinzel(ctx, 19, INK.ash, { spacing: 4 });
-  ctx.fillText('TWO SUITORS  ·  THREE HEARTHS  ·  AN OPEN COURT', VIEW.w / 2, 344);
+  ctx.fillText('TWO SUITORS  ·  THREE HEARTHS  ·  AN OPEN COURT', VIEW.w / 2, 312);
   resetSpacing(ctx);
 
-  // the four crests, by colour and by shape, flanking the call to play
-  const spacing = 132;
+  // the four crests struck as coins: colour and shape first, the name only third
+  const spacing = 150;
   CREST_IDS.forEach((id, i) => {
     const cx = VIEW.w / 2 + (i - 1.5) * spacing;
-    const cy = 396;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.shadowColor = CRESTS[id].color;
-    ctx.shadowBlur = 26;
-    drawCrest(ctx, id, 78, CRESTS[id].color);
-    ctx.restore();
-    cinzel(ctx, 16, CRESTS[id].bright, { spacing: 4 });
-    ctx.fillText(CRESTS[id].name, cx, cy + 56);
+    crestMedallion(ctx, id, cx, 372, 44);
+    cinzel(ctx, 17, CRESTS[id].bright, { spacing: 4.5 });
+    ctx.fillText(CRESTS[id].name, cx, 434);
     resetSpacing(ctx);
   });
 
-  cinzel(ctx, 16, '#ffd98a', { spacing: 2.4 });
-  ctx.fillText('HIGH RANK TAKES THE HEARTH  ·  A TIE GOES TO THE CYCLE', VIEW.w / 2, 476);
-  ctx.fillText('THE SAME CREST ON THE HEARTH BESIDE IT IS STOKED  +2', VIEW.w / 2, 498);
+  // the whole law, in two chips, on one line
+  const gap = 18;
+  const leftText = 'HIGH RANK TAKES THE HEARTH';
+  const rightText = 'SAME CREST BESIDE  ·  STOKED +2';
+  cinzel(ctx, 18, '#ffe3a6', { spacing: 2.6, weight: 700 });
+  const leftW = ctx.measureText(leftText).width + 40;
+  const rightW = ctx.measureText(rightText).width + 40;
   resetSpacing(ctx);
+  const total = leftW + gap + rightW;
+  ruleChip(ctx, leftText, VIEW.w / 2 - total / 2 + leftW / 2, 464);
+  ruleChip(ctx, rightText, VIEW.w / 2 + total / 2 - rightW / 2, 464);
 
   // a real hand, fanned across the foot of the court
   TITLE_FAN.forEach((card, i) => {
     const spread = i - (TITLE_FAN.length - 1) / 2;
     const view = {
-      x: VIEW.w / 2 + spread * 126,
-      y: 652 + Math.sin(scene.time * 1.4 + i) * 3,
-      scale: 0.72,
-      rot: spread * 0.095,
+      x: VIEW.w / 2 + spread * 115,
+      y: 616 + Math.abs(spread) * 4 + Math.sin(scene.time * 1.4 + i) * 2,
+      scale: 0.68,
+      rot: spread * 0.075,
       face: 1,
     };
     drawCard(ctx, card, view, {});
@@ -82,9 +132,9 @@ export function drawTitleScreen(ctx, scene) {
   const pulse = 0.62 + 0.38 * (1 + Math.sin(scene.time * 3)) * 0.5;
   ctx.save();
   ctx.globalAlpha = pulse;
-  plate(ctx, VIEW.w / 2 - 216, 516, 432, 50, { fill: 'rgba(12,8,6,0.88)', stroke: INK.gold, lineWidth: 2.4, radius: 10 });
-  anton(ctx, 30, INK.gold);
-  ctx.fillText('PRESS ENTER OR CLICK TO DEAL', VIEW.w / 2, 542);
+  plate(ctx, VIEW.w / 2 - 216, 494, 432, 46, { fill: 'rgba(12,8,6,0.88)', stroke: INK.gold, lineWidth: 2.4, radius: 10 });
+  anton(ctx, 29, INK.gold);
+  ctx.fillText('PRESS ENTER OR CLICK TO DEAL', VIEW.w / 2, 518);
   ctx.restore();
 }
 
@@ -158,7 +208,7 @@ function drawSuitorPanel(ctx, scene, side, cx, triumphant) {
   // the beaten suitor is dimmed, never hidden: the losing total has to stay readable
   ctx.globalAlpha = triumphant ? 1 : 0.76;
 
-  plate(ctx, cx - 164, 352, 328, 268, {
+  plate(ctx, cx - 164, 344, 328, 284, {
     fill: triumphant ? (side === 'player' ? 'rgba(42,22,6,0.84)' : 'rgba(10,18,28,0.84)') : 'rgba(8,8,10,0.7)',
     stroke: accent,
     lineWidth: triumphant ? 2.8 : 1.4,
@@ -169,16 +219,16 @@ function drawSuitorPanel(ctx, scene, side, cx, triumphant) {
     ctx.save();
     ctx.shadowColor = accent;
     ctx.shadowBlur = 34;
-    suitorSigil(ctx, side, cx, 406, 36, { ring: accent });
+    suitorSigil(ctx, side, cx, 392, 34, { ring: accent });
     ctx.restore();
   } else {
-    suitorSigil(ctx, side, cx, 406, 32, { ring: '#6b5d4c', inner: '#3a332b' });
+    suitorSigil(ctx, side, cx, 392, 30, { ring: '#6b5d4c', inner: '#3a332b' });
   }
 
-  cinzel(ctx, 21, accent, { spacing: 5 });
-  ctx.fillText(side === 'player' ? PLAYER_NAME : RIVAL_NAME, cx, 462);
-  cinzel(ctx, 9.5, INK.ashDim, { spacing: 2.2 });
-  ctx.fillText(side === 'player' ? 'SUITOR OF EMBERS' : RIVAL_TITLE, cx, 482);
+  cinzel(ctx, 22, accent, { spacing: 5 });
+  ctx.fillText(side === 'player' ? PLAYER_NAME : RIVAL_NAME, cx, 444);
+  cinzel(ctx, 11, INK.ashDim, { spacing: 2.4 });
+  ctx.fillText(side === 'player' ? 'SUITOR OF EMBERS' : RIVAL_TITLE, cx, 464);
   resetSpacing(ctx);
 
   // the numeral owns its own band: glow included, it never reaches the label beneath.
@@ -186,19 +236,20 @@ function drawSuitorPanel(ctx, scene, side, cx, triumphant) {
   // strength -- it is the one number that has to survive being shrunk to a thumbnail.
   ctx.save();
   if (dead) ctx.globalAlpha = 1;
-  anton(ctx, 100, dead ? '#ff6b4b' : accent);
+  anton(ctx, 116, dead ? '#ff6b4b' : accent);
   ctx.shadowColor = dead ? '#ff3b1e' : accent;
-  ctx.shadowBlur = dead ? 40 : 24;
+  ctx.shadowBlur = dead ? 44 : 24;
   ctx.fillText(String(life), cx, 540);
   ctx.fillText(String(life), cx, 540);
+  if (dead) ctx.fillText(String(life), cx, 540);
   ctx.restore();
-  cinzel(ctx, 11, INK.ashDim, { spacing: 4 });
-  ctx.fillText(dead ? 'NO LIFE LEFT' : 'LIFE', cx, 592);
+  cinzel(ctx, 12, dead ? INK.blood : INK.ash, { spacing: 4 });
+  ctx.fillText(dead ? 'NO LIFE LEFT' : 'LIFE', cx, 596);
   resetSpacing(ctx);
 
   const step = 23;
   for (let i = 0; i < LIFE_START; i += 1) {
-    lifePip(ctx, cx - (LIFE_START - 1) * step * 0.5 + i * step, 608, 7, i < life, dead ? INK.blood : accent);
+    lifePip(ctx, cx - (LIFE_START - 1) * step * 0.5 + i * step, 612, 8.5, i < life, dead ? INK.blood : accent);
   }
   ctx.restore();
 }
@@ -208,31 +259,47 @@ function drawFinalClash(ctx, scene, accent) {
   const event = scene.table.lastEvent;
   if (!event) return;
   const cx = VIEW.w / 2;
-  const cy = 486;
-  cinzel(ctx, 11.5, INK.ashDim, { spacing: 3.4 });
-  ctx.fillText('THE LAST CLASH', cx, 384);
+  const cy = 500;
+  cinzel(ctx, 14, INK.ash, { spacing: 4 });
+  ctx.fillText('THE LAST CLASH', cx, 376);
   resetSpacing(ctx);
 
   const winnerIsPlayer = event.winner === 'player';
-  drawCard(ctx, event.winCard, { x: cx - 96, y: cy, scale: 0.84, rot: -0.08, face: 1, glow: 0.7 }, { outcome: 'won' });
-  drawCard(ctx, event.loseCard, { x: cx + 96, y: cy, scale: 0.84, rot: 0.08, face: 1 }, { outcome: 'lost' });
+  drawCard(ctx, event.winCard, { x: cx - 104, y: cy, scale: 0.95, rot: -0.08, face: 1, glow: 0.8 }, { outcome: 'won' });
+  drawCard(ctx, event.loseCard, { x: cx + 104, y: cy, scale: 0.95, rot: 0.08, face: 1 }, { outcome: 'lost' });
 
-  plate(ctx, cx - 44, cy - 26, 88, 52, {
+  // The blow sits in the seam between the two cards; the stoke rides under them, so
+  // neither badge covers the crest that won the hearth.
+  plate(ctx, cx - 52, cy - 40, 104, 60, {
     fill: winnerIsPlayer ? 'rgba(62,34,6,0.97)' : 'rgba(14,20,29,0.97)',
     stroke: accent,
-    lineWidth: 2.6,
-    radius: 9,
+    lineWidth: 3,
+    radius: 10,
   });
-  anton(ctx, 36, accent);
-  ctx.fillText(`-${event.damage}`, cx, cy + 1);
+  ctx.save();
+  ctx.shadowColor = accent;
+  ctx.shadowBlur = 14;
+  anton(ctx, 44, accent);
+  ctx.fillText(`-${event.damage}`, cx, cy - 9);
+  ctx.restore();
   if (event.stoked) {
-    plate(ctx, cx - 66, cy + 34, 132, 34, {
-      fill: CRESTS[event.winCard.crest].color,
-      stroke: 'rgba(0,0,0,0.4)',
-      radius: 7,
-      lineWidth: 1.4,
+    const crest = CRESTS[event.winCard.crest];
+    const top = cy + 110;
+    ctx.save();
+    ctx.shadowColor = crest.color;
+    ctx.shadowBlur = 20;
+    plate(ctx, cx - 86, top, 172, 44, {
+      fill: crest.color,
+      stroke: 'rgba(0,0,0,0.45)',
+      radius: 9,
+      lineWidth: 1.6,
     });
-    anton(ctx, 22, '#1a110a');
-    ctx.fillText('STOKED', cx, cy + 52);
+    ctx.restore();
+    ctx.save();
+    ctx.translate(cx - 58, top + 22);
+    drawCrest(ctx, event.winCard.crest, 28, '#1a110a');
+    ctx.restore();
+    anton(ctx, 28, '#1a110a', 'left');
+    ctx.fillText('STOKED', cx - 40, top + 23);
   }
 }
