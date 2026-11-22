@@ -2,7 +2,7 @@
 // ember pips), the crest cycle wheel that shows the tie-break as a picture, the deck and
 // ash piles, whose move it is, the court log and the court's law.
 
-import { HEARTH_NUMERALS, INK, LIFE_START, RIVAL_NAME, RIVAL_TITLE, PLAYER_NAME, PLAYER_TITLE, SCALE, ZONE } from './config.js';
+import { DRESS, HEARTH_NUMERALS, INK, LIFE_START, RIVAL_NAME, RIVAL_TITLE, PLAYER_NAME, PLAYER_TITLE, SCALE, ZONE } from './config.js';
 import { CRESTS, CYCLE_ORDER, drawCrest } from './crests.js';
 import { cardsLeft } from './deck.js';
 import { drawCardBackAt, drawEmptySlot } from './card-art.js';
@@ -12,10 +12,12 @@ import { isMuted } from './audio.js';
 export function drawHud(ctx, scene) {
   drawLifeBlock(ctx, scene, 'rival');
   drawLifeBlock(ctx, scene, 'player');
-  drawCycleWheel(ctx, scene.time);
-  drawPiles(ctx, scene.table);
-  drawCourtsLaw(ctx);
   drawTurnBanner(ctx, scene);
+  drawPiles(ctx, scene.table);
+  // Everything below is the rail: useful while you play, noise when the court is framed.
+  if (!DRESS.rails) return;
+  drawCycleWheel(ctx, scene.time);
+  drawCourtsLaw(ctx);
   drawCourtLog(ctx, scene.table);
   drawControlHint(ctx);
   drawBankSlots(ctx, scene);
@@ -37,30 +39,34 @@ export function drawLifeBlock(ctx, scene, side) {
     lineWidth: side === 'player' ? 2.4 : 1.8,
   });
 
-  // name and sigil on the left, the numeral alone on the right, pips along the foot:
-  // nothing overlaps, so the life total stays legible at any size.
-  const sigilX = box.x + 42;
-  const sigilY = box.y + 42;
-  suitorSigil(ctx, side, sigilX, sigilY, 24);
+  // Two rhythms, one rule: the numeral never shares a band with anything else.
+  // On the rails it sits beside the name with the pips along the foot; in focus the
+  // name and pips stack at the head and the numeral owns the whole lower half.
+  const big = DRESS.lifeNumeral;
+  const headY = DRESS.rails ? box.y + 42 : box.y + 28;
+  const pipY = box.y + box.h - 16;
+  const numeralY = DRESS.rails ? box.y + box.h - 66 : box.y + box.h / 2 + 14;
 
-  cinzel(ctx, 22, accent, { align: 'left', spacing: 4.5 });
-  ctx.fillText(side === 'player' ? PLAYER_NAME : RIVAL_NAME, box.x + 76, sigilY - 9);
-  cinzel(ctx, 9.5, INK.ashDim, { align: 'left', spacing: 1.8 });
-  ctx.fillText(side === 'player' ? PLAYER_TITLE : RIVAL_TITLE, box.x + 76, sigilY + 13);
+  suitorSigil(ctx, side, box.x + (DRESS.rails ? 42 : 30), headY, DRESS.rails ? 24 : 19);
+
+  cinzel(ctx, DRESS.rails ? 22 : 21, accent, { align: 'left', spacing: 4.5 });
+  ctx.fillText(side === 'player' ? PLAYER_NAME : RIVAL_NAME, box.x + (DRESS.rails ? 76 : 58), headY - (DRESS.rails ? 9 : 1));
+  if (DRESS.rails) {
+    cinzel(ctx, 9.5, INK.ashDim, { align: 'left', spacing: 1.8 });
+    ctx.fillText(side === 'player' ? PLAYER_TITLE : RIVAL_TITLE, box.x + 76, headY + 13);
+  }
   resetSpacing(ctx);
 
-  const numeralY = box.y + box.h - 66;
-  anton(ctx, 80, hot ? INK.blood : accent, 'right');
+  anton(ctx, big, hot ? INK.blood : accent, 'right');
   ctx.save();
   ctx.shadowColor = hot ? INK.blood : accent;
   ctx.shadowBlur = 18 + flash * 30;
   ctx.fillText(String(life), box.x + box.w - 20, numeralY);
   ctx.restore();
-  cinzel(ctx, 12, INK.ashDim, { align: 'left', spacing: 5 });
+  cinzel(ctx, DRESS.rails ? 12 : 14, INK.ashDim, { align: 'left', spacing: 5 });
   ctx.fillText('LIFE', box.x + 20, numeralY);
   resetSpacing(ctx);
 
-  const pipY = box.y + box.h - 16;
   const step = (box.w - 38) / (LIFE_START - 1);
   for (let i = 0; i < LIFE_START; i += 1) {
     lifePip(ctx, box.x + 19 + i * step, pipY, 7.5, i < life, accent);
@@ -200,14 +206,16 @@ export function drawTurnBanner(ctx, scene) {
         : table.phase === 'over'
           ? 'COURT CLOSED'
           : 'VESPER MOVES';
-  anton(ctx, yours ? 32 : 28, accent);
+  anton(ctx, DRESS.rails ? (yours ? 32 : 28) : 34, accent);
   ctx.save();
   if (yours) {
     ctx.shadowColor = INK.gold;
     ctx.shadowBlur = 14 + Math.sin(scene.time * 3) * 5;
   }
-  ctx.fillText(headline, box.x + box.w / 2, box.y + 24);
+  ctx.fillText(headline, box.x + box.w / 2, box.y + (DRESS.rails ? 24 : box.h / 2));
   ctx.restore();
+  // the round and the stock belong on the rails; in focus the pile speaks for itself
+  if (!DRESS.rails) return;
   cinzel(ctx, 10.5, INK.ashDim, { spacing: 2.6 });
   ctx.fillText(`ROUND ${Math.max(1, table.round)}  ·  ${cardsLeft(table.deck)} IN DECK`, box.x + box.w / 2, box.y + 48);
   resetSpacing(ctx);
@@ -264,7 +272,7 @@ function drawMuteMark(ctx, x, y) {
 export function drawControlHint(ctx) {
   const box = ZONE.controlHint;
   plate(ctx, box.x, box.y, box.w, box.h, { fill: 'rgba(9,6,5,0.6)', stroke: 'rgba(246,201,87,0.14)' });
-  const lines = ['CLICK A CARD, THEN A HEARTH', '1-5 PICK  ·  Q W E HEARTH', 'B BANK  ·  F FLARE  ·  M MUTE'];
+  const lines = ['CLICK A CARD, THEN A HEARTH', '1-5 PICK  ·  Q W E HEARTH', 'B BANK  ·  F FLARE', 'M MUTE  ·  TAB FRAMES'];
   cinzel(ctx, 10, INK.ashDim, { spacing: 1.2 });
   lines.forEach((line, i) => ctx.fillText(line, box.x + box.w / 2, box.y + 15 + i * 16));
   resetSpacing(ctx);

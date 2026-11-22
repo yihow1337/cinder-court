@@ -1,7 +1,7 @@
 // Draws the court: the lantern-lit table and its three hearths, every card in play, the
 // verdict badge in the seam where two cards clash, the rival's tell, and then the HUD.
 
-import { CARD, HEARTH_COUNT, HEARTH_NUMERALS, INK, SCALE, VIEW, ZONE } from './config.js';
+import { CARD, DRESS, HEARTH_COUNT, HEARTH_NUMERALS, INK, SCALE, VIEW, ZONE } from './config.js';
 import { CRESTS, drawCrest } from './crests.js';
 import { drawCard, drawEmptySlot } from './card-art.js';
 import { drawEmbers, drawMotes } from './particles.js';
@@ -86,7 +86,7 @@ export function drawHearths(ctx, scene) {
     const rivalCard = scene.table.hearths[i].rival;
     if (!playerCard) {
       drawEmptySlot(ctx, hearthSlot('player', i), open ? INK.gold : 'rgba(142,123,102,0.6)');
-      if (open) {
+      if (open && DRESS.rails) {
         cinzel(ctx, 12, INK.gold, { spacing: 3 });
         ctx.fillText(['Q', 'W', 'E'][i], cx, ZONE.hearthPlayerY + (CARD.h * SCALE.hearth) / 2 + 2);
         resetSpacing(ctx);
@@ -143,35 +143,42 @@ export function drawVerdicts(ctx, scene) {
 }
 
 function drawHearthMark(ctx, index) {
-  const cx = ZONE.hearthCentersX[index];
-  const cy = ZONE.hearthSeamY;
+  const s = DRESS.verdict;
   ctx.save();
+  ctx.translate(ZONE.hearthCentersX[index], ZONE.hearthSeamY);
+  ctx.scale(s, s);
   ctx.fillStyle = 'rgba(8,5,4,0.78)';
   ctx.beginPath();
-  ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+  ctx.arc(0, 0, 22, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = 'rgba(246,201,87,0.4)';
   ctx.lineWidth = 1.6;
   ctx.stroke();
-  ctx.restore();
   anton(ctx, 23, 'rgba(246,201,87,0.85)');
-  ctx.fillText(HEARTH_NUMERALS[index], cx, cy + 1);
+  ctx.fillText(HEARTH_NUMERALS[index], 0, 1);
+  ctx.restore();
 }
 
+/**
+ * The verdict sits in the seam, drawn around its own origin and scaled by the dressing,
+ * so the badge grows with the court instead of becoming a chip on a bigger table.
+ */
 function drawVerdictBadge(ctx, event, index, time) {
-  const cx = ZONE.hearthCentersX[index];
-  const cy = ZONE.hearthSeamY;
   const playerWon = event.winner === 'player';
   const accent = playerWon ? INK.gold : INK.cold;
   const w = event.stoked ? 206 : 150;
   const h = 46;
 
   ctx.save();
+  ctx.translate(ZONE.hearthCentersX[index], ZONE.hearthSeamY);
+  ctx.scale(DRESS.verdict, DRESS.verdict);
+
+  ctx.save();
   if (event.stoked) {
     ctx.shadowColor = CRESTS[event.winCard.crest].color;
     ctx.shadowBlur = 22 + Math.sin(time * 6) * 8;
   }
-  plate(ctx, cx - w / 2, cy - h / 2, w, h, {
+  plate(ctx, -w / 2, -h / 2, w, h, {
     fill: playerWon ? 'rgba(62,34,6,0.95)' : 'rgba(14,20,29,0.95)',
     stroke: accent,
     lineWidth: 2.6,
@@ -180,40 +187,41 @@ function drawVerdictBadge(ctx, event, index, time) {
   ctx.restore();
 
   // an arrow pointing at whoever is bleeding
-  triangle(ctx, cx - w / 2 + 20, cy, 11, playerWon ? 'up' : 'down', playerWon ? INK.cold : INK.gold);
+  triangle(ctx, -w / 2 + 20, 0, 11, playerWon ? 'up' : 'down', playerWon ? INK.cold : INK.gold);
 
   anton(ctx, 34, accent, 'left');
   ctx.save();
   ctx.shadowColor = accent;
   ctx.shadowBlur = 10;
-  ctx.fillText(`-${event.damage}`, cx - w / 2 + 36, cy + 1);
+  ctx.fillText(`-${event.damage}`, -w / 2 + 36, 1);
   ctx.restore();
 
   if (event.stoked) {
-    const insetX = cx + 6;
-    plate(ctx, insetX, cy - 16, w / 2 - 14, 32, {
+    const insetX = 6;
+    plate(ctx, insetX, -16, w / 2 - 14, 32, {
       fill: CRESTS[event.winCard.crest].color,
       stroke: 'rgba(0,0,0,0.5)',
       radius: 6,
       lineWidth: 1.5,
     });
     ctx.save();
-    ctx.translate(insetX + 18, cy);
+    ctx.translate(insetX + 18, 0);
     drawCrest(ctx, event.winCard.crest, 24, '#15100b');
     ctx.restore();
     anton(ctx, 19, '#1a110a', 'left');
-    ctx.fillText('STOKED', insetX + 34, cy + 1);
+    ctx.fillText('STOKED', insetX + 34, 1);
   } else {
     ctx.save();
-    ctx.translate(cx + w / 2 - 28, cy);
+    ctx.translate(w / 2 - 28, 0);
     drawCrest(ctx, event.winCard.crest, 26, CRESTS[event.winCard.crest].color);
     ctx.restore();
     if (event.byCycle) {
       cinzel(ctx, 9, accent, { spacing: 1.2 });
-      ctx.fillText('CYCLE', cx + w / 2 - 28, cy + 22);
+      ctx.fillText('CYCLE', w / 2 - 28, 22);
       resetSpacing(ctx);
     }
   }
+  ctx.restore();
 }
 
 // --- the rival's tell ------------------------------------------------------
@@ -229,15 +237,17 @@ function drawTell(ctx, scene, index, crestId, strength, label) {
   const cx = ZONE.hearthCentersX[index];
   const slot = hearthSlot('rival', index);
   const bob = Math.sin(scene.time * 3.4) * 7;
+  const s = DRESS.tell;
   if (scene.table.hearths[index].rival) return;
 
   // a crest-coloured glance washing down the hearth she is reaching for
+  const washHalf = ZONE.hearthPlateW / 2 - 6;
   ctx.save();
   const wash = ctx.createLinearGradient(0, ZONE.hearthRivalY - 10, 0, ZONE.hearthSeamY + 30);
   wash.addColorStop(0, hexAlpha(crest.color, 0.46 * strength));
   wash.addColorStop(1, hexAlpha(crest.color, 0));
   ctx.fillStyle = wash;
-  roundRect(ctx, cx - 100, ZONE.hearthRivalY - 10, 200, 220, 18);
+  roundRect(ctx, cx - washHalf, ZONE.hearthRivalY - 10, washHalf * 2, 220, 18);
   ctx.fill();
   ctx.restore();
 
@@ -255,7 +265,7 @@ function drawTell(ctx, scene, index, crestId, strength, label) {
   ctx.save();
   ctx.globalAlpha = 0.65 + 0.35 * strength;
   ctx.translate(cx, emberY);
-  drawCrest(ctx, crestId, 24, crest.bright);
+  drawCrest(ctx, crestId, 24 * s, crest.bright);
   ctx.restore();
 
   // dashed outline plus the crest she is weighing, drawn inside the empty slot
@@ -273,16 +283,16 @@ function drawTell(ctx, scene, index, crestId, strength, label) {
 
   ctx.save();
   ctx.globalAlpha = 0.35 + 0.35 * strength;
-  ctx.translate(slot.x, slot.y - 16);
-  drawCrest(ctx, crestId, 68, crest.color);
+  ctx.translate(slot.x, slot.y - 34 * s);
+  drawCrest(ctx, crestId, 68 * s, crest.color);
   ctx.restore();
 
   ctx.save();
-  ctx.globalAlpha = 0.6 + 0.4 * strength;
-  cinzel(ctx, 12, crest.bright, { spacing: 3 });
-  ctx.fillText('VESPER', slot.x, slot.y + 36);
-  cinzel(ctx, 10, crest.bright, { spacing: 2 });
-  ctx.fillText(label, slot.x, slot.y + 54);
+  ctx.globalAlpha = 0.72 + 0.28 * strength;
+  cinzel(ctx, 12 * s, crest.bright, { spacing: 3 * s });
+  ctx.fillText('VESPER', slot.x, slot.y + 20 * s);
+  cinzel(ctx, 10 * s, crest.bright, { spacing: 2 * s });
+  ctx.fillText(label, slot.x, slot.y + 40 * s);
   ctx.restore();
   resetSpacing(ctx);
 }

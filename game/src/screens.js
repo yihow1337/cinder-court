@@ -62,8 +62,8 @@ export function drawTitleScreen(ctx, scene) {
   });
 
   cinzel(ctx, 16, '#ffd98a', { spacing: 2.4 });
-  ctx.fillText('HIGH RANK TAKES THE HEARTH  ·  A TIE GOES TO THE CYCLE', VIEW.w / 2, 482);
-  ctx.fillText('THE SAME CREST ON THE HEARTH BESIDE IT IS STOKED  +2', VIEW.w / 2, 504);
+  ctx.fillText('HIGH RANK TAKES THE HEARTH  ·  A TIE GOES TO THE CYCLE', VIEW.w / 2, 476);
+  ctx.fillText('THE SAME CREST ON THE HEARTH BESIDE IT IS STOKED  +2', VIEW.w / 2, 498);
   resetSpacing(ctx);
 
   // a real hand, fanned across the foot of the court
@@ -71,7 +71,7 @@ export function drawTitleScreen(ctx, scene) {
     const spread = i - (TITLE_FAN.length - 1) / 2;
     const view = {
       x: VIEW.w / 2 + spread * 126,
-      y: 643 + Math.sin(scene.time * 1.4 + i) * 3,
+      y: 652 + Math.sin(scene.time * 1.4 + i) * 3,
       scale: 0.72,
       rot: spread * 0.095,
       face: 1,
@@ -82,9 +82,9 @@ export function drawTitleScreen(ctx, scene) {
   const pulse = 0.62 + 0.38 * (1 + Math.sin(scene.time * 3)) * 0.5;
   ctx.save();
   ctx.globalAlpha = pulse;
-  plate(ctx, VIEW.w / 2 - 216, 524, 432, 50, { fill: 'rgba(12,8,6,0.88)', stroke: INK.gold, lineWidth: 2.4, radius: 10 });
+  plate(ctx, VIEW.w / 2 - 216, 516, 432, 50, { fill: 'rgba(12,8,6,0.88)', stroke: INK.gold, lineWidth: 2.4, radius: 10 });
   anton(ctx, 30, INK.gold);
-  ctx.fillText('PRESS ENTER OR CLICK TO DEAL', VIEW.w / 2, 550);
+  ctx.fillText('PRESS ENTER OR CLICK TO DEAL', VIEW.w / 2, 542);
   ctx.restore();
 }
 
@@ -155,7 +155,8 @@ function drawSuitorPanel(ctx, scene, side, cx, triumphant) {
   const accent = triumphant ? (side === 'player' ? INK.gold : INK.cold) : INK.ashDim;
   const dead = life <= 0;
   ctx.save();
-  ctx.globalAlpha = triumphant ? 1 : 0.62;
+  // the beaten suitor is dimmed, never hidden: the losing total has to stay readable
+  ctx.globalAlpha = triumphant ? 1 : 0.76;
 
   plate(ctx, cx - 164, 352, 328, 268, {
     fill: triumphant ? (side === 'player' ? 'rgba(42,22,6,0.84)' : 'rgba(10,18,28,0.84)') : 'rgba(8,8,10,0.7)',
@@ -180,19 +181,24 @@ function drawSuitorPanel(ctx, scene, side, cx, triumphant) {
   ctx.fillText(side === 'player' ? 'SUITOR OF EMBERS' : RIVAL_TITLE, cx, 482);
   resetSpacing(ctx);
 
-  anton(ctx, 88, dead ? INK.blood : accent);
+  // the numeral owns its own band: glow included, it never reaches the label beneath.
+  // A spent suitor is dimmed everywhere except the nought itself, which burns at full
+  // strength -- it is the one number that has to survive being shrunk to a thumbnail.
   ctx.save();
-  ctx.shadowColor = dead ? INK.blood : accent;
-  ctx.shadowBlur = 26;
-  ctx.fillText(String(life), cx, 546);
+  if (dead) ctx.globalAlpha = 1;
+  anton(ctx, 100, dead ? '#ff6b4b' : accent);
+  ctx.shadowColor = dead ? '#ff3b1e' : accent;
+  ctx.shadowBlur = dead ? 40 : 24;
+  ctx.fillText(String(life), cx, 540);
+  ctx.fillText(String(life), cx, 540);
   ctx.restore();
-  cinzel(ctx, 10.5, INK.ashDim, { spacing: 4 });
-  ctx.fillText(dead ? 'NO LIFE LEFT' : 'LIFE', cx, 588);
+  cinzel(ctx, 11, INK.ashDim, { spacing: 4 });
+  ctx.fillText(dead ? 'NO LIFE LEFT' : 'LIFE', cx, 592);
   resetSpacing(ctx);
 
   const step = 23;
   for (let i = 0; i < LIFE_START; i += 1) {
-    lifePip(ctx, cx - (LIFE_START - 1) * step * 0.5 + i * step, 604, 7, i < life, dead ? INK.blood : accent);
+    lifePip(ctx, cx - (LIFE_START - 1) * step * 0.5 + i * step, 608, 7, i < life, dead ? INK.blood : accent);
   }
   ctx.restore();
 }
@@ -202,31 +208,31 @@ function drawFinalClash(ctx, scene, accent) {
   const event = scene.table.lastEvent;
   if (!event) return;
   const cx = VIEW.w / 2;
-  const cy = 482;
-  cinzel(ctx, 11, INK.ashDim, { spacing: 3.4 });
-  ctx.fillText('THE LAST CLASH', cx, 402);
+  const cy = 486;
+  cinzel(ctx, 11.5, INK.ashDim, { spacing: 3.4 });
+  ctx.fillText('THE LAST CLASH', cx, 384);
   resetSpacing(ctx);
 
   const winnerIsPlayer = event.winner === 'player';
-  drawCard(ctx, event.winCard, { x: cx - 82, y: cy, scale: 0.7, rot: -0.08, face: 1 }, { outcome: 'won' });
-  drawCard(ctx, event.loseCard, { x: cx + 82, y: cy, scale: 0.7, rot: 0.08, face: 1 }, { outcome: 'lost' });
+  drawCard(ctx, event.winCard, { x: cx - 96, y: cy, scale: 0.84, rot: -0.08, face: 1, glow: 0.7 }, { outcome: 'won' });
+  drawCard(ctx, event.loseCard, { x: cx + 96, y: cy, scale: 0.84, rot: 0.08, face: 1 }, { outcome: 'lost' });
 
-  plate(ctx, cx - 36, cy - 22, 72, 44, {
+  plate(ctx, cx - 44, cy - 26, 88, 52, {
     fill: winnerIsPlayer ? 'rgba(62,34,6,0.97)' : 'rgba(14,20,29,0.97)',
     stroke: accent,
-    lineWidth: 2.4,
-    radius: 8,
+    lineWidth: 2.6,
+    radius: 9,
   });
-  anton(ctx, 30, accent);
+  anton(ctx, 36, accent);
   ctx.fillText(`-${event.damage}`, cx, cy + 1);
   if (event.stoked) {
-    plate(ctx, cx - 54, cy + 28, 108, 28, {
+    plate(ctx, cx - 66, cy + 34, 132, 34, {
       fill: CRESTS[event.winCard.crest].color,
       stroke: 'rgba(0,0,0,0.4)',
-      radius: 6,
+      radius: 7,
       lineWidth: 1.4,
     });
-    anton(ctx, 18, '#1a110a');
-    ctx.fillText('STOKED', cx, cy + 43);
+    anton(ctx, 22, '#1a110a');
+    ctx.fillText('STOKED', cx, cy + 52);
   }
 }

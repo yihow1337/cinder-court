@@ -56,6 +56,11 @@ export function attachInput(canvas, app, actions) {
       actions.mute();
       return;
     }
+    if (key === 'tab') {
+      event.preventDefault();
+      actions.frame();
+      return;
+    }
     if (key === 'enter' || key === ' ') {
       event.preventDefault();
       if (app.screen === 'title') actions.start();

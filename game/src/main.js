@@ -2,7 +2,7 @@
 // dealing, your move, the rival's tell, her commitment, the clash, the end of the round
 // and the end of the court. Screen routing lives here too.
 
-import { TIME, ZONE } from './config.js';
+import { DRESS, TIME, ZONE, setDressing } from './config.js';
 import { CRESTS } from './crests.js';
 import { createTable, bankCard, checkOutcome, closeRound, flareCard, playToHearth, passTurn, resolveNextClash, setTell, startRound } from './table.js';
 import { canBank, hasAnyMove, openHearths, pendingClashes } from './rules.js';
@@ -247,6 +247,11 @@ const actions = {
   mute: () => {
     toggleMute();
     if (!isMuted()) playSelect();
+  },
+  /** Pull the rails off the court and let the play fill the frame, or put them back. */
+  frame: () => {
+    setDressing(DRESS.mode === 'rails' ? 'focus' : 'rails');
+    playSelect();
   },
   pickCard: (index) => {
     if (hurryDeal()) return;

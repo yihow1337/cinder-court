@@ -124,7 +124,8 @@ function drawFace(ctx, card, view, state) {
 function drawLostScrim(ctx) {
   ctx.save();
   roundRect(ctx, -W / 2, -H / 2, W, H, CARD.radius);
-  ctx.fillStyle = 'rgba(16,24,34,0.58)';
+  // cold enough to read as beaten at a glance, light enough that the rank still reads
+  ctx.fillStyle = 'rgba(16,24,34,0.46)';
   ctx.fill();
   ctx.strokeStyle = INK.coldDeep;
   ctx.lineWidth = 5;

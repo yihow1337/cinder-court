@@ -79,8 +79,85 @@ export const ZONE = {
   rulesHook: { x: 12, y: 436, w: 226, h: 96 },
   turnBanner: { x: 1048, y: 168, w: 224, h: 62 },
   logPanel: { x: 1048, y: 240, w: 224, h: 282 },
-  controlHint: { x: 1048, y: 528, w: 224, h: 58 },
+  controlHint: { x: 1048, y: 524, w: 224, h: 74 },
 };
+
+// --- court dressing --------------------------------------------------------
+// The same table can be set two ways. RAILS is the full court, with the cycle wheel, the
+// deck and ash piles, the court's law, the log and the control hints laid around the
+// play. FOCUS pulls those rails away and reflows what is left -- hands, hearths, verdict
+// badges and life numerals all grow into the freed width -- so the court reads from
+// across the room. TAB swaps between them in play; the table still is taken in FOCUS.
+// Only presentation moves: the deck, the rules and the rival all behave identically.
+
+export const DRESS = { mode: 'rails', rails: true, lifeNumeral: 80, verdict: 1, tell: 1 };
+
+const DRESSINGS = {
+  rails: {
+    rails: true,
+    lifeNumeral: 80,
+    verdict: 1,
+    tell: 1,
+    scale: { playerHand: 0.92, rivalHand: 0.76, hearth: 0.7 },
+    zone: {
+      rivalHandY: 8,
+      rivalHandStep: 104,
+      playerHandY: 516,
+      playerHandStep: 130,
+      hearthCentersX: [340, 640, 940],
+      hearthRivalY: 172,
+      hearthPlayerY: 360,
+      hearthSeamY: 339,
+      hearthPlateW: 212,
+      rivalLife: { x: 992, y: 10, w: 278, h: 140 },
+      playerLife: { x: 10, y: 548, w: 278, h: 164 },
+      turnBanner: { x: 1048, y: 168, w: 224, h: 62 },
+      deckStack: { cx: 62, cy: 366 },
+      discardStack: { cx: 170, cy: 366 },
+      rivalBank: { cx: 86, cy: 86 },
+      playerBank: { cx: 1196, cy: 650 },
+    },
+  },
+  focus: {
+    rails: false,
+    lifeNumeral: 112,
+    verdict: 1.22,
+    tell: 1.2,
+    scale: { playerHand: 0.94, rivalHand: 0.8, hearth: 0.8 },
+    zone: {
+      rivalHandY: 10,
+      rivalHandStep: 126,
+      playerHandY: 524,
+      playerHandStep: 150,
+      hearthCentersX: [300, 640, 980],
+      hearthRivalY: 164,
+      hearthPlayerY: 344,
+      hearthSeamY: 336,
+      hearthPlateW: 248,
+      rivalLife: { x: 1022, y: 10, w: 248, h: 156 },
+      playerLife: { x: 10, y: 538, w: 248, h: 174 },
+      turnBanner: { x: 16, y: 12, w: 216, h: 52 },
+      deckStack: { cx: 1104, cy: 638 },
+      discardStack: { cx: 1210, cy: 638 },
+      // a banked card has to come to rest clear of the piles and the opened-up hands
+      rivalBank: { cx: 78, cy: 242 },
+      playerBank: { cx: 1198, cy: 470 },
+    },
+  },
+};
+
+/** Re-dress the court in place, so every module holding ZONE or SCALE follows along. */
+export function setDressing(mode) {
+  const preset = DRESSINGS[mode] ?? DRESSINGS.rails;
+  DRESS.mode = DRESSINGS[mode] ? mode : 'rails';
+  DRESS.rails = preset.rails;
+  DRESS.lifeNumeral = preset.lifeNumeral;
+  DRESS.verdict = preset.verdict;
+  DRESS.tell = preset.tell;
+  Object.assign(SCALE, preset.scale);
+  Object.assign(ZONE, preset.zone);
+  return DRESS.mode;
+}
 
 // --- pacing (seconds) ------------------------------------------------------
 export const TIME = {

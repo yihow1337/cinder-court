@@ -19,6 +19,7 @@ node serve.ts     # then open http://localhost:8080
 ```
 
 Click a card then a hearth, or use `1`–`5` to pick, `Q` `W` `E` for the hearths, `B` to bank,
-`F` to flare, `M` to mute, `Enter` to deal and `R` for a rematch.
+`F` to flare, `M` to mute, `Enter` to deal and `R` for a rematch. `Tab` pulls the rails — the
+cycle wheel, the court log and the law — off the table so the court fills the frame.
 
 MIT licensed. Fonts: Anton and Cinzel (SIL Open Font License), bundled under `game/fonts/`.

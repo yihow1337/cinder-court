@@ -63,12 +63,16 @@ export function cardBox(pose) {
   return { x: pose.x - w / 2, y: pose.y - h / 2, w, h };
 }
 
+/** The whole column you can click to commit to a hearth: both slots and the seam
+ *  between them, derived from the hearth zone so it follows the court's dressing. */
 export function hearthColumn(index) {
+  const top = ZONE.hearthRivalY - 16;
+  const bottom = ZONE.hearthPlayerY + CARD.h * SCALE.hearth + 24;
   return {
     x: ZONE.hearthCentersX[index] - ZONE.hearthPlateW / 2,
-    y: ZONE.hearthRivalY - 16,
+    y: top,
     w: ZONE.hearthPlateW,
-    h: ZONE.hearthPlinthY + 32 - (ZONE.hearthRivalY - 16),
+    h: bottom - top,
   };
 }
 

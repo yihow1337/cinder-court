@@ -5,12 +5,12 @@
 // and table functions a live match calls. Nothing is painted by hand, and the same seed
 // always yields the same frame, so a screenshot can be retaken exactly.
 
-import { TIME } from './config.js';
+import { HEARTH_COUNT, TIME, setDressing } from './config.js';
 import { createTable, playToHearth, resolveNextClash, startRound, checkOutcome } from './table.js';
 import { createRival, peekIntent } from './ai.js';
 import { takeNamedCard } from './deck.js';
 import { assignTargets } from './layout.js';
-import { createFlourish, stepTable } from './animate.js';
+import { createFlourish, ensureView, stepTable } from './animate.js';
 import { emitEmbers, stepEmbers, stepMotes, stepRisingColumn } from './particles.js';
 import { pendingClashes } from './rules.js';
 
@@ -59,6 +59,8 @@ function settle(app, seconds = 2.4) {
  */
 export function applyShot(app, name) {
   app.time = 2.3;
+  // The table is framed with the rails pulled away, so the court itself fills the frame.
+  setDressing(name === 'table' ? 'focus' : 'rails');
   if (name === 'title') {
     app.screen = 'title';
     settle(app, 1.2);
@@ -118,6 +120,14 @@ function buildMidRound(app) {
   app.intent = peekIntent(table, app.rival);
   app.hover = null;
   settle(app, 2.6);
+  // The springs have come to rest; put the rim glow back on the cards that won their
+  // seam, so the frame catches the court a beat after the snap rather than long after.
+  for (let i = 0; i < HEARTH_COUNT; i += 1) {
+    const event = table.hearths[i].event;
+    if (!event) continue;
+    const winner = table.hearths[i][event.winner];
+    if (winner) ensureView(winner).glow = event.stoked ? 0.85 : 0.5;
+  }
 }
 
 /**
