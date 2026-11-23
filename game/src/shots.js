@@ -5,9 +5,9 @@
 // and table functions a live match calls. Nothing is painted by hand, and the same seed
 // always yields the same frame, so a screenshot can be retaken exactly.
 
-import { HEARTH_COUNT, TIME, ZONE, setDressing } from './config.js';
+import { HEARTH_COUNT, TIME, setDressing } from './config.js';
 import { createTable, playToHearth, resolveNextClash, startRound, checkOutcome } from './table.js';
-import { createRival, peekIntent } from './ai.js';
+import { createRival } from './ai.js';
 import { takeNamedCard } from './deck.js';
 import { assignTargets } from './layout.js';
 import { createFlourish, ensureView, stepTable } from './animate.js';
@@ -81,9 +81,14 @@ export function applyShot(app, name) {
 }
 
 /**
- * An open court in mid-round: the rival has taken the left hearth by one point, you have
- * answered on the centre with a stoked ASH 6, your third card is picked up and she is
- * already eyeing the right hearth.
+ * An open court one beat after the snap, with everything at rest.
+ *
+ * Two hearths are settled and scored -- she took the left by a point, you took the centre
+ * back with a stoked ASH 6 -- and on the right she has already committed, so the open gold
+ * slot under her BELL 4 is the move in front of you. Nothing is mid-flight: no card
+ * overlaps another, no chip crosses a rank, and the only motion left is the rim glow on
+ * the two cards that won their seam. The frame is meant to be read at a glance from a
+ * contact sheet, where a lively tangle would just be a smudge.
  */
 function buildMidRound(app) {
   const table = createTable(app.seed);
@@ -102,32 +107,28 @@ function buildMidRound(app) {
   stageHand(table, 'rival', [
     ['thorn', 5],
     ['tide', 3],
-    ['tide', 6],
     ['bell', 4],
+    ['tide', 6],
     ['thorn', 2],
   ]);
 
-  // four real moves: she takes the left hearth, you stoke the centre and take it back
+  // five real moves: she takes the left hearth, you stoke the centre and take it back,
+  // then she commits BELL 4 to the right and the court comes back round to you
   scriptedPlay(table, 'player', 'ash', 4, 0);
   scriptedPlay(table, 'rival', 'thorn', 5, 0);
   scriptedPlay(table, 'player', 'ash', 6, 1);
   scriptedPlay(table, 'rival', 'tide', 3, 1);
+  scriptedPlay(table, 'rival', 'bell', 4, 2);
 
   table.phase = 'player';
   table.turn = 'player';
   table.timer = 0;
   app.selected = handIndexOf(table, 'player', 'tide', 5);
-  app.intent = peekIntent(table, app.rival);
+  // No tell and no sparks: she has already shown her hand on the right hearth, and a
+  // speck of ember over a rank costs more than a lit seam is worth at thumbnail size.
+  app.intent = null;
   app.hover = null;
-  settle(app, 2.6);
-  // Let the springs rest, then re-light the moment: the stoked seam throws sparks and the
-  // left hearth sheds cold ones, and a third of a second of flight is stepped so they are
-  // caught mid-arc. The frame reads as a court a beat after the snap, not a diagram.
-  const seam = ZONE.hearthSeamY;
-  emitEmbers(app.burst, ZONE.hearthCentersX[1], seam + 6, '#ff8a3d', 52, 1.9);
-  emitEmbers(app.burst, ZONE.hearthCentersX[1], seam - 14, '#ffd98a', 28, 1.35);
-  emitEmbers(app.burst, ZONE.hearthCentersX[0], seam + 2, '#9db9d4', 18, 0.9);
-  settle(app, 0.42);
+  settle(app, 3.2);
   // Put the rim glow and the landing pop back on the cards that won their seam.
   for (let i = 0; i < HEARTH_COUNT; i += 1) {
     const event = table.hearths[i].event;
@@ -135,8 +136,11 @@ function buildMidRound(app) {
     const winner = table.hearths[i][event.winner];
     if (!winner) continue;
     const view = ensureView(winner);
-    view.glow = event.stoked ? 0.95 : 0.55;
-    view.pop = event.stoked ? 0.55 : 0.28;
+    // Swell barely: a popped card grows into the gutter the layout just bought. And keep
+    // the crest-bright glow for the stoked card alone -- on a plain win it paints over the
+    // gold-or-cold rim that says whose hearth this is, which is the more useful cue.
+    view.glow = event.stoked ? 0.95 : 0;
+    view.pop = event.stoked ? 0.18 : 0.08;
   }
 }
 

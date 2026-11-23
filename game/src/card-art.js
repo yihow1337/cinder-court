@@ -107,7 +107,7 @@ function drawFace(ctx, card, view, state) {
   ctx.letterSpacing = '0px';
 
   if (state.outcome === 'lost') drawLostScrim(ctx);
-  if (state.outcome === 'won') drawWonRim(ctx, view);
+  if (state.outcome === 'won') drawWonRim(ctx, state.side);
   if (state.selected) drawSelectRim(ctx);
   if (state.flared) drawFlareMark(ctx, crest);
   if ((view.glow ?? 0) > 0.01) {
@@ -141,19 +141,26 @@ function drawLostScrim(ctx) {
   ctx.restore();
 }
 
-function drawWonRim(ctx, view) {
+/**
+ * The rim a card wears when it took its hearth, in the colour of whoever took it: gold
+ * for you, cold ash-blue for Vesper. The court uses that pair everywhere else -- the life
+ * blocks, the verdict badges, the end screens -- and a hearth is the one place it used to
+ * break, which left two gold rims on a table where the two sides had won one each.
+ */
+function drawWonRim(ctx, side) {
+  const tone = side === 'rival' ? INK.cold : INK.gold;
   ctx.save();
-  ctx.shadowColor = INK.gold;
+  ctx.shadowColor = tone;
   ctx.shadowBlur = 22;
-  ctx.strokeStyle = INK.gold;
+  ctx.strokeStyle = tone;
   ctx.lineWidth = 6;
   roundRect(ctx, -W / 2 + 2, -H / 2 + 2, W - 4, H - 4, CARD.radius - 1);
   ctx.stroke();
   ctx.stroke();
   ctx.restore();
-  // a gold crown wedge at the top edge
+  // a crown wedge at the top edge, in the same hand's colour
   ctx.save();
-  ctx.fillStyle = INK.gold;
+  ctx.fillStyle = tone;
   ctx.beginPath();
   ctx.moveTo(0, -H / 2 - 13);
   ctx.lineTo(16, -H / 2 + 5);

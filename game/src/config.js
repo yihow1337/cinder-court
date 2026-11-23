@@ -85,12 +85,14 @@ export const ZONE = {
 // --- court dressing --------------------------------------------------------
 // The same table can be set two ways. RAILS is the full court, with the cycle wheel, the
 // deck and ash piles, the court's law, the log and the control hints laid around the
-// play. FOCUS pulls those rails away and reflows what is left -- hands, hearths, verdict
-// badges and life numerals all grow into the freed width -- so the court reads from
-// across the room. TAB swaps between them in play; the table still is taken in FOCUS.
+// play. FOCUS pulls those rails away and re-budgets the bare 1280x720 the court is left
+// with: the hearth row and the life numerals take the space, the two hands give some back,
+// and every row is separated by a gutter nothing may cross -- so the court reads from
+// across the room and survives being shrunk to a thumbnail. TAB swaps between them in
+// play; the table still is taken in FOCUS.
 // Only presentation moves: the deck, the rules and the rival all behave identically.
 
-export const DRESS = { mode: 'rails', rails: true, lifeNumeral: 80, verdict: 1, tell: 1 };
+export const DRESS = { mode: 'rails', rails: true, lifeNumeral: 80, verdict: 1, tell: 1, handArc: 2.6 };
 
 const DRESSINGS = {
   rails: {
@@ -98,6 +100,7 @@ const DRESSINGS = {
     lifeNumeral: 80,
     verdict: 1,
     tell: 1,
+    handArc: 2.6,
     scale: { playerHand: 0.92, rivalHand: 0.76, hearth: 0.7 },
     zone: {
       rivalHandY: 8,
@@ -118,30 +121,45 @@ const DRESSINGS = {
       playerBank: { cx: 1196, cy: 650 },
     },
   },
+  // FOCUS is budgeted as four bands down the 720: her hand, her side of the hearths, your
+  // side of the hearths, your hand. Nothing is allowed to touch its neighbour or the frame
+  // edge, because the court has to survive being shrunk to a thumbnail -- a card clipped by
+  // the top edge or a hand card resting on a hearth card turns the whole table to mush.
+  // The hearth row is the biggest thing on the table; the two hands read a size below it.
   focus: {
     rails: false,
     lifeNumeral: 132,
-    verdict: 1.4,
+    verdict: 1,
     tell: 1.45,
-    scale: { playerHand: 0.94, rivalHand: 0.8, hearth: 0.8 },
+    // a flatter fan: a steep arc is charm at full size and overflow at the frame edge
+    handArc: 0.9,
+    scale: { playerHand: 0.74, rivalHand: 0.66, hearth: 0.84 },
     zone: {
-      rivalHandY: 14,
-      rivalHandStep: 126,
-      playerHandY: 524,
-      playerHandStep: 150,
-      hearthCentersX: [300, 640, 980],
-      hearthRivalY: 164,
-      hearthPlayerY: 344,
-      hearthSeamY: 336,
-      hearthPlateW: 248,
-      rivalLife: { x: 998, y: 8, w: 272, h: 170 },
-      playerLife: { x: 10, y: 528, w: 272, h: 184 },
-      turnBanner: { x: 16, y: 12, w: 216, h: 52 },
-      deckStack: { cx: 1104, cy: 638 },
-      discardStack: { cx: 1210, cy: 638 },
+      // her hand  16 .. 153
+      rivalHandY: 16,
+      rivalHandStep: 116,
+      // her hearth row 170 .. 345, then a 25px seam, then your hearth row 370 .. 545.
+      // That seam is the load-bearing gap: it is wide enough for the verdict badge to
+      // sit between the two cards instead of across them, so no chip ever touches a rank.
+      hearthRivalY: 170,
+      hearthSeamY: 357,
+      hearthPlayerY: 370,
+      // your hand 556 .. 713
+      playerHandY: 556,
+      playerHandStep: 136,
+      hearthCentersX: [310, 640, 970],
+      hearthPlateW: 252,
+      // the two life blocks take the corners the hearth row cannot reach
+      rivalLife: { x: 966, y: 8, w: 302, h: 156 },
+      playerLife: { x: 12, y: 552, w: 296, h: 158 },
+      turnBanner: { x: 16, y: 14, w: 216, h: 52 },
+      // the stock and the ash take the left flank the hearth row cannot reach, where they
+      // weigh against the banner above them instead of crowding your hand
+      deckStack: { cx: 92, cy: 266 },
+      discardStack: { cx: 92, cy: 408 },
       // a banked card has to come to rest clear of the piles and the opened-up hands
-      rivalBank: { cx: 78, cy: 242 },
-      playerBank: { cx: 1198, cy: 470 },
+      rivalBank: { cx: 1192, cy: 300 },
+      playerBank: { cx: 1192, cy: 462 },
     },
   },
 };
@@ -154,6 +172,7 @@ export function setDressing(mode) {
   DRESS.lifeNumeral = preset.lifeNumeral;
   DRESS.verdict = preset.verdict;
   DRESS.tell = preset.tell;
+  DRESS.handArc = preset.handArc;
   Object.assign(SCALE, preset.scale);
   Object.assign(ZONE, preset.zone);
   return DRESS.mode;

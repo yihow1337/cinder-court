@@ -1,7 +1,7 @@
 // Where everything sits on the 1280x720 court. One job: turn table state into target
 // positions for every card, and turn a mouse point back into the thing under it.
 
-import { CARD, HEARTH_COUNT, SCALE, ZONE } from './config.js';
+import { CARD, DRESS, HEARTH_COUNT, SCALE, ZONE } from './config.js';
 
 /** Deterministic -1..1 wobble per card so a dealt hand never looks machine-stacked. */
 function wobble(card) {
@@ -15,7 +15,7 @@ export function handSlot(side, index, count, card, lifted) {
   const scale = side === 'player' ? SCALE.playerHand : SCALE.rivalHand;
   const centerX = side === 'player' ? ZONE.playerHandCenterX : ZONE.rivalHandCenterX;
   const spread = index - (count - 1) / 2;
-  const arc = Math.abs(spread) ** 2 * 2.6;
+  const arc = Math.abs(spread) ** 2 * DRESS.handArc;
   const jitter = card ? wobble(card) : 0;
   if (side === 'player') {
     return {

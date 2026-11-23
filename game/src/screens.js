@@ -265,8 +265,8 @@ function drawFinalClash(ctx, scene, accent) {
   resetSpacing(ctx);
 
   const winnerIsPlayer = event.winner === 'player';
-  drawCard(ctx, event.winCard, { x: cx - 104, y: cy, scale: 0.95, rot: -0.08, face: 1, glow: 0.8 }, { outcome: 'won' });
-  drawCard(ctx, event.loseCard, { x: cx + 104, y: cy, scale: 0.95, rot: 0.08, face: 1 }, { outcome: 'lost' });
+  drawCard(ctx, event.winCard, { x: cx - 104, y: cy, scale: 0.95, rot: -0.08, face: 1, glow: 0.8 }, { outcome: 'won', side: event.winner });
+  drawCard(ctx, event.loseCard, { x: cx + 104, y: cy, scale: 0.95, rot: 0.08, face: 1 }, { outcome: 'lost', side: event.loser });
 
   // The blow sits in the seam between the two cards; the stoke rides under them, so
   // neither badge covers the crest that won the hearth.

@@ -85,7 +85,20 @@ export function drawHearths(ctx, scene) {
     const playerCard = scene.table.hearths[i].player;
     const rivalCard = scene.table.hearths[i].rival;
     if (!playerCard) {
-      drawEmptySlot(ctx, hearthSlot('player', i), open ? INK.gold : 'rgba(142,123,102,0.6)');
+      const slot = hearthSlot('player', i);
+      if (open && !DRESS.rails) {
+        // In focus the hearth you can still answer on is the live thing on the table, so
+        // its empty slot is struck twice through a gold glow: at thumbnail size a single
+        // thin dash reads as a missing card rather than as an invitation.
+        ctx.save();
+        ctx.shadowColor = INK.gold;
+        ctx.shadowBlur = 20;
+        drawEmptySlot(ctx, slot, INK.gold);
+        drawEmptySlot(ctx, slot, INK.gold);
+        ctx.restore();
+      } else {
+        drawEmptySlot(ctx, slot, open ? INK.gold : 'rgba(142,123,102,0.6)');
+      }
       if (open && DRESS.rails) {
         cinzel(ctx, 12, INK.gold, { spacing: 3 });
         ctx.fillText(['Q', 'W', 'E'][i], cx, ZONE.hearthPlayerY + (CARD.h * SCALE.hearth) / 2 + 2);
@@ -100,7 +113,7 @@ export function drawHearths(ctx, scene) {
 
 function cardState(scene, card, side, hearthIndex) {
   const event = hearthIndex === undefined ? null : scene.table.hearths[hearthIndex].event;
-  const state = { flared: Boolean(card.flared) };
+  const state = { flared: Boolean(card.flared), side };
   if (event) state.outcome = event.winner === side ? 'won' : 'lost';
   return state;
 }
@@ -160,14 +173,20 @@ function drawHearthMark(ctx, index) {
 }
 
 /**
- * The verdict sits in the seam, drawn around its own origin and scaled by the dressing,
- * so the badge grows with the court instead of becoming a chip on a bigger table.
+ * The verdict sits in the seam where the two cards meet.
+ *
+ * On the rails that seam is roomy, so the badge is a tall chip. In focus the seam is a
+ * narrow band -- it opens below her crest and closes above your rank -- so the badge
+ * flattens and widens into exactly that band. It carries the same blow and the same stoke,
+ * and it crosses neither numeral, which is the whole point when the court is shrunk to a
+ * thumbnail: a verdict that hides a rank costs more than it tells.
  */
 function drawVerdictBadge(ctx, event, index, time) {
   const playerWon = event.winner === 'player';
   const accent = playerWon ? INK.gold : INK.cold;
-  const w = event.stoked ? 206 : 150;
-  const h = 46;
+  const band = !DRESS.rails;
+  const w = band ? (event.stoked ? 268 : 178) : event.stoked ? 206 : 150;
+  const h = band ? 40 : 46;
 
   ctx.save();
   ctx.translate(ZONE.hearthCentersX[index], ZONE.hearthSeamY);
@@ -187,33 +206,33 @@ function drawVerdictBadge(ctx, event, index, time) {
   ctx.restore();
 
   // an arrow pointing at whoever is bleeding
-  triangle(ctx, -w / 2 + 20, 0, 11, playerWon ? 'up' : 'down', playerWon ? INK.cold : INK.gold);
+  triangle(ctx, -w / 2 + (band ? 24 : 20), 0, band ? 12 : 11, playerWon ? 'up' : 'down', playerWon ? INK.cold : INK.gold);
 
-  anton(ctx, 34, accent, 'left');
+  anton(ctx, band ? 36 : 34, accent, 'left');
   ctx.save();
   ctx.shadowColor = accent;
   ctx.shadowBlur = 10;
-  ctx.fillText(`-${event.damage}`, -w / 2 + 36, 1);
+  ctx.fillText(`-${event.damage}`, -w / 2 + (band ? 42 : 36), 1);
   ctx.restore();
 
   if (event.stoked) {
-    const insetX = 6;
-    plate(ctx, insetX, -16, w / 2 - 14, 32, {
+    const insetX = band ? 16 : 6;
+    plate(ctx, insetX, band ? -15 : -16, w / 2 - (band ? 26 : 14), band ? 30 : 32, {
       fill: CRESTS[event.winCard.crest].color,
       stroke: 'rgba(0,0,0,0.5)',
       radius: 6,
       lineWidth: 1.5,
     });
     ctx.save();
-    ctx.translate(insetX + 18, 0);
-    drawCrest(ctx, event.winCard.crest, 24, '#15100b');
+    ctx.translate(insetX + (band ? 20 : 18), 0);
+    drawCrest(ctx, event.winCard.crest, band ? 26 : 24, '#15100b');
     ctx.restore();
-    anton(ctx, 19, '#1a110a', 'left');
-    ctx.fillText('STOKED', insetX + 34, 1);
+    anton(ctx, band ? 22 : 19, '#1a110a', 'left');
+    ctx.fillText('STOKED', insetX + (band ? 38 : 34), 1);
   } else {
     ctx.save();
-    ctx.translate(w / 2 - 28, 0);
-    drawCrest(ctx, event.winCard.crest, 26, CRESTS[event.winCard.crest].color);
+    ctx.translate(w / 2 - (band ? 32 : 28), 0);
+    drawCrest(ctx, event.winCard.crest, band ? 30 : 26, CRESTS[event.winCard.crest].color);
     ctx.restore();
     if (event.byCycle) {
       cinzel(ctx, 9, accent, { spacing: 1.2 });
